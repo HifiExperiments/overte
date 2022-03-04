@@ -13,6 +13,7 @@
 #include "MeshPartPayload.h"
 
 #include <BillboardMode.h>
+#include <MirrorMode.h>
 #include <PerfStat.h>
 #include <DualQuaternion.h>
 #include <graphics/ShaderConstants.h>
@@ -217,7 +218,7 @@ void ModelMeshPartPayload::updateKey(const render::ItemKey& key) {
         builder.withTransparent();
     }
 
-    if (_cullWithParent) {
+    if (_cullWithParent || _mirrorMode != MirrorMode::NONE) {
         builder.withSubMetaCulled();
     }
 
@@ -396,6 +397,10 @@ render::HighlightStyle ModelMeshPartPayload::getOutlineStyle(const ViewFrustum& 
                                                          _parentTransform.getTranslation(), viewFrustum, height);
 }
 
+void ModelMeshPartPayload::computeMirrorView(ViewFrustum& viewFrustum) const {
+    return;
+}
+
 void ModelMeshPartPayload::setBlendshapeBuffer(const std::unordered_map<int, gpu::BufferPointer>& blendshapeBuffers, const QVector<int>& blendedMeshSizes) {
     if (_meshIndex < blendedMeshSizes.length() && blendedMeshSizes.at(_meshIndex) == _meshNumVertices) {
         auto blendshapeBuffer = blendshapeBuffers.find(_meshIndex);
@@ -451,5 +456,11 @@ template <> HighlightStyle payloadGetOutlineStyle(const ModelMeshPartPayload::Po
         return payload->getOutlineStyle(viewFrustum, height);
     }
     return HighlightStyle();
+}
+
+template <> void payloadComputeMirrorView(const ModelMeshPartPayload::Pointer& payload, ViewFrustum& viewFrustum) {
+    if (payload) {
+        payload->computeMirrorView(viewFrustum);
+    }
 }
 }

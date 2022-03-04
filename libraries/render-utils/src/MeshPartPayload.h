@@ -60,8 +60,11 @@ public:
     void setCullWithParent(bool value) { _cullWithParent = value; }
     void setRenderWithZones(const QVector<QUuid>& renderWithZones) { _renderWithZones = renderWithZones; }
     void setBillboardMode(BillboardMode billboardMode) { _billboardMode = billboardMode; }
+    void setMirrorMode(MirrorMode mirrorMode) { _mirrorMode = mirrorMode; }
+    void setPortalExitID(const QUuid& portalExitID) { _portalExitID = portalExitID; }
     bool passesZoneOcclusionTest(const std::unordered_set<QUuid>& containingZones) const;
     render::HighlightStyle getOutlineStyle(const ViewFrustum& viewFrustum, const size_t height) const;
+    void computeMirrorView(ViewFrustum& viewFrustum) const;
 
     void addMaterial(graphics::MaterialLayer material) { _drawMaterials.push(material); }
     void removeMaterial(graphics::MaterialPointer material) { _drawMaterials.remove(material); }
@@ -96,6 +99,8 @@ private:
     bool _cullWithParent { false };
     QVector<QUuid> _renderWithZones;
     BillboardMode _billboardMode { BillboardMode::NONE };
+    MirrorMode _mirrorMode { MirrorMode::NONE };
+    QUuid _portalExitID;
     uint64_t _created;
 
     Transform _localTransform;
@@ -111,6 +116,7 @@ namespace render {
     template <> void payloadRender(const ModelMeshPartPayload::Pointer& payload, RenderArgs* args);
     template <> bool payloadPassesZoneOcclusionTest(const ModelMeshPartPayload::Pointer& payload, const std::unordered_set<QUuid>& containingZones);
     template <> HighlightStyle payloadGetOutlineStyle(const ModelMeshPartPayload::Pointer& payload, const ViewFrustum& viewFrustum, const size_t height);
+    template <> void payloadComputeMirrorView(const ModelMeshPartPayload::Pointer& payload, ViewFrustum& viewFrustum);
 }
 
 #endif // hifi_MeshPartPayload_h

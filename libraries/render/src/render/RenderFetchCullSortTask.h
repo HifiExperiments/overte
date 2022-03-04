@@ -25,6 +25,7 @@ public:
         LIGHT,
         META,
         OUTLINE,
+        MIRROR,
         LAYER_FRONT_OPAQUE_SHAPE,
         LAYER_FRONT_TRANSPARENT_SHAPE,
         LAYER_HUD_OPAQUE_SHAPE,
