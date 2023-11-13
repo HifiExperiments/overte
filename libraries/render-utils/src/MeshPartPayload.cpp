@@ -218,7 +218,7 @@ void ModelMeshPartPayload::updateKey(const render::ItemKey& key) {
         builder.withTransparent();
     }
 
-    if (_cullWithParent || _mirrorMode != MirrorMode::NONE) {
+    if (_cullWithParent) {
         builder.withSubMetaCulled();
     }
 
