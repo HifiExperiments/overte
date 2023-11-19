@@ -226,6 +226,10 @@ void ModelMeshPartPayload::updateKey(const render::ItemKey& key) {
         builder.withOutline();
     }
 
+    if (_mirrorMode == MirrorMode::MIRROR || (_mirrorMode == MirrorMode::PORTAL && !_portalExitID.isNull())) {
+        builder.withMirror();
+    }
+
     _itemKey = builder.build();
 }
 
@@ -360,7 +364,7 @@ void ModelMeshPartPayload::render(RenderArgs* args) {
 
         const uint32_t compactColor = GeometryCache::toCompactColor(glm::vec4(outColor));
         _drawMesh->getColorBuffer()->setData(sizeof(compactColor), (const gpu::Byte*) &compactColor);
-    } else {
+    } else if (!_itemKey.isMirror()) {
         // apply material properties
         if (RenderPipelines::bindMaterials(_drawMaterials, batch, args->_renderMode, args->_enableTexturing)) {
             args->_details._materialSwitches++;
@@ -400,7 +404,9 @@ render::HighlightStyle ModelMeshPartPayload::getOutlineStyle(const ViewFrustum& 
 }
 
 void ModelMeshPartPayload::computeMirrorView(ViewFrustum& viewFrustum) const {
-    return;
+    Transform transform = _parentTransform;
+    transform = transform.worldTransform(_localTransform);
+    MirrorModeHelpers::computeMirrorView(viewFrustum, transform.getTranslation(), transform.getRotation(), _mirrorMode, _portalExitID);
 }
 
 void ModelMeshPartPayload::setBlendshapeBuffer(const std::unordered_map<int, gpu::BufferPointer>& blendshapeBuffers, const QVector<int>& blendedMeshSizes) {

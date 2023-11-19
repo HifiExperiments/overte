@@ -80,6 +80,8 @@ public:
     bool passesZoneOcclusionTest(const std::unordered_set<QUuid>& containingZones) const override;
     virtual HighlightStyle getOutlineStyle(const ViewFrustum& viewFrustum, const size_t height) const override;
     void computeMirrorView(ViewFrustum& viewFrustum) const override;
+    static void computeMirrorViewOperator(ViewFrustum& viewFrustum, const glm::vec3& inPropertiesPosition, const glm::quat& inPropertiesRotation,
+                                          MirrorMode mirrorMode, const QUuid& portalExitID);
 
 protected:
     virtual bool needsRenderUpdateFromEntity() const final { return needsRenderUpdateFromEntity(_entity); }
