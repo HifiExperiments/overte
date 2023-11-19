@@ -463,7 +463,7 @@ public:
 
         virtual HighlightStyle getOutlineStyle(const ViewFrustum& viewFrustum, const size_t height) const = 0;
 
-        virtual void computeMirrorView(ViewFrustum& viewFrustum) const = 0;
+        virtual ItemID computeMirrorView(ViewFrustum& viewFrustum) const = 0;
 
         ~PayloadInterface() {}
 
@@ -520,7 +520,7 @@ public:
 
     HighlightStyle getOutlineStyle(const ViewFrustum& viewFrustum, const size_t height) const { return _payload->getOutlineStyle(viewFrustum, height); }
 
-    void computeMirrorView(ViewFrustum& viewFrustum) const { _payload->computeMirrorView(viewFrustum); }
+    ItemID computeMirrorView(ViewFrustum& viewFrustum) const { return _payload->computeMirrorView(viewFrustum); }
 
     // Access the status
     const StatusPointer& getStatus() const { return _payload->getStatus(); }
@@ -583,7 +583,7 @@ template <class T> HighlightStyle payloadGetOutlineStyle(const std::shared_ptr<T
 }
 
 // Mirror Interface
-template <class T> void payloadComputeMirrorView(const std::shared_ptr<T>& payloadData, ViewFrustum& viewFrustum) { return; }
+template <class T> ItemID payloadComputeMirrorView(const std::shared_ptr<T>& payloadData, ViewFrustum& viewFrustum) { return Item::INVALID_ITEM_ID; }
 
 // THe Payload class is the real Payload to be used
 // THis allow anything to be turned into a Payload as long as the required interface functions are available
@@ -613,7 +613,7 @@ public:
 
     virtual HighlightStyle getOutlineStyle(const ViewFrustum& viewFrustum, const size_t height) const override { return payloadGetOutlineStyle<T>(_data, viewFrustum, height); }
 
-    virtual void computeMirrorView(ViewFrustum& viewFrustum) const override { return payloadComputeMirrorView<T>(_data, viewFrustum); }
+    virtual ItemID computeMirrorView(ViewFrustum& viewFrustum) const override { return payloadComputeMirrorView<T>(_data, viewFrustum); }
 
 protected:
     DataPointer _data;
@@ -671,7 +671,7 @@ public:
     virtual uint32_t metaFetchMetaSubItems(ItemIDs& subItems) const = 0;
     virtual bool passesZoneOcclusionTest(const std::unordered_set<QUuid>& containingZones) const = 0;
     virtual HighlightStyle getOutlineStyle(const ViewFrustum& viewFrustum, const size_t height) const = 0;
-    virtual void computeMirrorView(ViewFrustum& viewFrustum) const = 0;
+    virtual ItemID computeMirrorView(ViewFrustum& viewFrustum) const = 0;
 
     // FIXME: this isn't the best place for this since it's only used for ModelEntities, but currently all Entities use PayloadProxyInterface
     virtual void handleBlendedVertices(int blendshapeNumber, const QVector<BlendshapeOffset>& blendshapeOffsets,
@@ -685,7 +685,7 @@ template <> uint32_t metaFetchMetaSubItems(const PayloadProxyInterface::Pointer&
 template <> const ShapeKey shapeGetShapeKey(const PayloadProxyInterface::Pointer& payload);
 template <> bool payloadPassesZoneOcclusionTest(const PayloadProxyInterface::Pointer& payload, const std::unordered_set<QUuid>& containingZones);
 template <> HighlightStyle payloadGetOutlineStyle(const PayloadProxyInterface::Pointer& payload, const ViewFrustum& viewFrustum, const size_t height);
-template <> void payloadComputeMirrorView(const PayloadProxyInterface::Pointer& payload, ViewFrustum& viewFrustum);
+template <> ItemID payloadComputeMirrorView(const PayloadProxyInterface::Pointer& payload, ViewFrustum& viewFrustum);
 
 typedef Item::PayloadPointer PayloadPointer;
 typedef std::vector<PayloadPointer> Payloads;

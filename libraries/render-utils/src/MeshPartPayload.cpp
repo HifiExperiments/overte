@@ -403,10 +403,10 @@ render::HighlightStyle ModelMeshPartPayload::getOutlineStyle(const ViewFrustum& 
                                                          _parentTransform.getTranslation(), viewFrustum, height);
 }
 
-void ModelMeshPartPayload::computeMirrorView(ViewFrustum& viewFrustum) const {
+ItemID ModelMeshPartPayload::computeMirrorView(ViewFrustum& viewFrustum) const {
     Transform transform = _parentTransform;
     transform = transform.worldTransform(_localTransform);
-    MirrorModeHelpers::computeMirrorView(viewFrustum, transform.getTranslation(), transform.getRotation(), _mirrorMode, _portalExitID);
+    return MirrorModeHelpers::computeMirrorView(viewFrustum, transform.getTranslation(), transform.getRotation(), _mirrorMode, _portalExitID);
 }
 
 void ModelMeshPartPayload::setBlendshapeBuffer(const std::unordered_map<int, gpu::BufferPointer>& blendshapeBuffers, const QVector<int>& blendedMeshSizes) {
@@ -466,9 +466,10 @@ template <> HighlightStyle payloadGetOutlineStyle(const ModelMeshPartPayload::Po
     return HighlightStyle();
 }
 
-template <> void payloadComputeMirrorView(const ModelMeshPartPayload::Pointer& payload, ViewFrustum& viewFrustum) {
+template <> ItemID payloadComputeMirrorView(const ModelMeshPartPayload::Pointer& payload, ViewFrustum& viewFrustum) {
     if (payload) {
-        payload->computeMirrorView(viewFrustum);
+        return payload->computeMirrorView(viewFrustum);
     }
+    return Item::INVALID_ITEM_ID;
 }
 }
