@@ -175,6 +175,7 @@ const FILTER_TYPES = [
     "Web",
     "Material",
     "ParticleEffect",
+    "ProceduralParticleEffect",
     "PolyLine",
     "PolyVox",
     "Text",

@@ -353,6 +353,7 @@ enum class EntityVersion : PacketVersion {
     Mirror,
     WantsKeyboardFocus,
     AudioZones,
+    ProceduralParticles,
 
     // Add new versions above here
     NUM_PACKET_TYPE,

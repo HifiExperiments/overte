@@ -205,6 +205,8 @@ public:
 
     HighlightStyle getOutlineStyle(ItemID id, const ViewFrustum& viewFrustum, uint16_t height) { return _items[id].getOutlineStyle(viewFrustum, height); }
 
+    void simulate(ItemID id, RenderArgs* args) { _items[id].renderSimulate(args); }
+
 protected:
 
     // Thread safe elements that can be accessed from anywhere

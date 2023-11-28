@@ -36,7 +36,7 @@ void RenderFetchCullSortTask::build(JobModel& task, const Varying& input, Varyin
     const auto nonspatialSelection = task.addJob<FetchNonspatialItems>("FetchLayeredSelection", nonspatialFilter);
 
     // Multi filter visible items into different buckets
-    const int NUM_SPATIAL_FILTERS = 6;
+    const int NUM_SPATIAL_FILTERS = 7;
     const int NUM_NON_SPATIAL_FILTERS = 3;
     const int OPAQUE_SHAPE_BUCKET = 0;
     const int TRANSPARENT_SHAPE_BUCKET = 1;
@@ -44,6 +44,7 @@ void RenderFetchCullSortTask::build(JobModel& task, const Varying& input, Varyin
     const int META_BUCKET = 3;
     const int OUTLINE_BUCKET = 4;
     const int MIRROR_BUCKET = 5;
+    const int SIMULATE_BUCKET = 6;
     const int BACKGROUND_BUCKET = 2;
     MultiFilterItems<NUM_SPATIAL_FILTERS>::ItemFilterArray spatialFilters = { {
             ItemFilter::Builder::opaqueShape().withoutMirror(),
@@ -51,7 +52,8 @@ void RenderFetchCullSortTask::build(JobModel& task, const Varying& input, Varyin
             ItemFilter::Builder::light(),
             ItemFilter::Builder::meta().withoutMirror(),
             ItemFilter::Builder().withVisible().withOutline(),
-            ItemFilter::Builder::mirror()
+            ItemFilter::Builder::mirror(),
+            ItemFilter::Builder().withSimulate()
         } };
     MultiFilterItems<NUM_NON_SPATIAL_FILTERS>::ItemFilterArray nonspatialFilters = { {
             ItemFilter::Builder::opaqueShape(),
@@ -82,7 +84,7 @@ void RenderFetchCullSortTask::build(JobModel& task, const Varying& input, Varyin
 
     task.addJob<ClearContainingZones>("ClearContainingZones");
 
-    output = Output(BucketList{ opaques, transparents, lights, metas, filteredSpatialBuckets[OUTLINE_BUCKET], mirrors,
+    output = Output(BucketList{ opaques, transparents, lights, metas, filteredSpatialBuckets[OUTLINE_BUCKET], mirrors, filteredSpatialBuckets[SIMULATE_BUCKET],
                     filteredLayeredOpaque.getN<FilterLayeredItems::Outputs>(0), filteredLayeredTransparent.getN<FilterLayeredItems::Outputs>(0),
                     filteredLayeredOpaque.getN<FilterLayeredItems::Outputs>(1), filteredLayeredTransparent.getN<FilterLayeredItems::Outputs>(1),
                     background }, spatialSelection);
