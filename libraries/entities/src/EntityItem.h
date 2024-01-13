@@ -562,12 +562,6 @@ public:
     void setTags(const QSet<QString>& tags);
     QSet<QString> getTags() const;
 
-    MirrorMode getMirrorMode() const;
-    void setMirrorMode(MirrorMode value);
-
-    QUuid getPortalExitID() const;
-    void setPortalExitID(const QUuid& value);
-
 signals:
     void spaceUpdate(std::pair<int32_t, glm::vec4> data);
 
@@ -750,9 +744,6 @@ protected:
     bool _cullWithParent { false };
 
     QSet<QString> _tags;
-
-    MirrorMode _mirrorMode { MirrorMode::NONE };
-    QUuid _portalExitID;
 
     mutable bool _needsRenderUpdate { false };
 };

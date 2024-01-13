@@ -239,7 +239,6 @@ public:
 
     void disableContextViewCorrection();
     void restoreContextViewCorrection();
-    void setContextMirrorViewCorrection(bool shouldMirror);
 
     void disableContextStereo();
     void restoreContextStereo();
@@ -339,7 +338,6 @@ public:
 
         COMMAND_disableContextViewCorrection,
         COMMAND_restoreContextViewCorrection,
-        COMMAND_setContextMirrorViewCorrection,
 
         COMMAND_disableContextStereo,
         COMMAND_restoreContextStereo,

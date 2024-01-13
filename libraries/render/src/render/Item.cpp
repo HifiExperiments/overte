@@ -168,11 +168,4 @@ namespace render {
         }
         return payload->getOutlineStyle(viewFrustum, height);
     }
-
-    template <> ItemID payloadComputeMirrorView(const PayloadProxyInterface::Pointer& payload, ViewFrustum& viewFrustum) {
-        if (!payload) {
-            return Item::INVALID_ITEM_ID;
-        }
-        return payload->computeMirrorView(viewFrustum);
-    }
 }

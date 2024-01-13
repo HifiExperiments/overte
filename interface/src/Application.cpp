@@ -2541,7 +2541,6 @@ void Application::initialize(const QCommandLineParser &parser) {
         copyViewFrustum(viewFrustum);
         return viewFrustum.getPosition();
     });
-    MirrorModeHelpers::setComputeMirrorViewOperator(EntityRenderer::computeMirrorViewOperator);
 
     DependencyManager::get<UsersScriptingInterface>()->setKickConfirmationOperator([this] (const QUuid& nodeID, unsigned int banFlags) { userKickConfirmation(nodeID, banFlags); });
 

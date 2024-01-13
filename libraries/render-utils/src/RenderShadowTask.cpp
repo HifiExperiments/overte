@@ -53,6 +53,7 @@ void RenderShadowTask::build(JobModel& task, const render::Varying& input, rende
         auto fadeEffect = DependencyManager::get<FadeEffect>();
         initZPassPipelines(*shapePlumber, std::make_shared<gpu::State>(), fadeEffect->getBatchSetter(), fadeEffect->getItemUniformSetter());
     });
+
     const auto setupOutput = task.addJob<RenderShadowSetup>("ShadowSetup", input);
     const auto queryResolution = setupOutput.getN<RenderShadowSetup::Output>(1);
     const auto shadowFrame = setupOutput.getN<RenderShadowSetup::Output>(3);
