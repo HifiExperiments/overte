@@ -46,7 +46,7 @@ void RenderFetchCullSortTask::build(JobModel& task, const Varying& input, Varyin
     const int MIRROR_BUCKET = 5;
     const int BACKGROUND_BUCKET = 2;
     MultiFilterItems<NUM_SPATIAL_FILTERS>::ItemFilterArray spatialFilters = { {
-            ItemFilter::Builder::opaqueShape(),
+            ItemFilter::Builder::opaqueShape().withoutMirror(),
             ItemFilter::Builder::transparentShape(),
             ItemFilter::Builder::light(),
             ItemFilter::Builder::meta().withoutMirror(),
@@ -70,6 +70,7 @@ void RenderFetchCullSortTask::build(JobModel& task, const Varying& input, Varyin
     const auto transparents = task.addJob<DepthSortItems>("DepthSortTransparent", filteredSpatialBuckets[TRANSPARENT_SHAPE_BUCKET], DepthSortItems(false));
     const auto lights = filteredSpatialBuckets[LIGHT_BUCKET];
     const auto metas = filteredSpatialBuckets[META_BUCKET];
+    const auto mirrors = task.addJob<DepthSortItems>("DepthSortMirrors", filteredSpatialBuckets[MIRROR_BUCKET]);
 
     const auto background = filteredNonspatialBuckets[BACKGROUND_BUCKET];
 

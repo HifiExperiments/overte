@@ -46,6 +46,7 @@ void initDeferredPipelines(ShapePlumber& plumber, const render::ShapePipeline::B
 void initForwardPipelines(ShapePlumber& plumber);
 void initZPassPipelines(ShapePlumber& plumber, gpu::StatePointer state, const render::ShapePipeline::BatchSetter& batchSetter, const render::ShapePipeline::ItemSetter& itemSetter);
 void sortAndRenderZPassShapes(const ShapePlumberPointer& shapePlumber, const render::RenderContextPointer& renderContext, const render::ShapeBounds& inShapes, render::ItemBounds &itemBounds);
+void initMirrorPipelines(ShapePlumber& plumber, gpu::StatePointer state, const render::ShapePipeline::BatchSetter& batchSetter, const render::ShapePipeline::ItemSetter& itemSetter, bool forward);
 
 void addPlumberPipeline(ShapePlumber& plumber,
         const ShapeKey& key, int programId, gpu::StatePointer& baseState,
@@ -479,6 +480,45 @@ void sortAndRenderZPassShapes(const ShapePlumberPointer& shapePlumber, const ren
 
     renderContext->args->_shapePipeline = nullptr;
     renderContext->args->_batch = nullptr;
+}
+
+void initMirrorPipelines(ShapePlumber& shapePlumber, gpu::StatePointer state, const render::ShapePipeline::BatchSetter& extraBatchSetter, const render::ShapePipeline::ItemSetter& itemSetter, bool forward) {
+    using namespace shader::render_utils::program;
+
+    if (forward) {
+        shapePlumber.addPipeline(
+            ShapeKey::Filter::Builder().withoutDeformed().withoutFade(),
+            gpu::Shader::createProgram(model_shadow_mirror_forward), state);
+
+        shapePlumber.addPipeline(
+            ShapeKey::Filter::Builder().withDeformed().withoutDualQuatSkinned().withoutFade(),
+            gpu::Shader::createProgram(model_shadow_mirror_forward_deformed), state);
+
+        shapePlumber.addPipeline(
+            ShapeKey::Filter::Builder().withDeformed().withDualQuatSkinned().withoutFade(),
+            gpu::Shader::createProgram(model_shadow_mirror_forward_deformeddq), state);
+    } else {
+        shapePlumber.addPipeline(
+            ShapeKey::Filter::Builder().withoutDeformed().withoutFade(),
+            gpu::Shader::createProgram(model_shadow_mirror), state);
+        shapePlumber.addPipeline(
+            ShapeKey::Filter::Builder().withoutDeformed().withFade(),
+            gpu::Shader::createProgram(model_shadow_mirror_fade), state, extraBatchSetter, itemSetter);
+
+        shapePlumber.addPipeline(
+            ShapeKey::Filter::Builder().withDeformed().withoutDualQuatSkinned().withoutFade(),
+            gpu::Shader::createProgram(model_shadow_mirror_deformed), state);
+        shapePlumber.addPipeline(
+            ShapeKey::Filter::Builder().withDeformed().withoutDualQuatSkinned().withFade(),
+            gpu::Shader::createProgram(model_shadow_mirror_fade_deformed), state, extraBatchSetter, itemSetter);
+
+        shapePlumber.addPipeline(
+            ShapeKey::Filter::Builder().withDeformed().withDualQuatSkinned().withoutFade(),
+            gpu::Shader::createProgram(model_shadow_mirror_deformeddq), state);
+        shapePlumber.addPipeline(
+            ShapeKey::Filter::Builder().withDeformed().withDualQuatSkinned().withFade(),
+            gpu::Shader::createProgram(model_shadow_mirror_fade_deformeddq), state, extraBatchSetter, itemSetter);
+    }
 }
 
 bool RenderPipelines::bindMaterial(graphics::MaterialPointer& material, gpu::Batch& batch, render::Args::RenderMode renderMode, bool enableTextures) {
