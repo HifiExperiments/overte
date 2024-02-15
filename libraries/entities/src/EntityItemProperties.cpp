@@ -645,6 +645,7 @@ EntityPropertyFlags EntityItemProperties::getChangedProperties() const {
     CHECK_PROPERTY_CHANGE(PROP_SCRIPT_URL, scriptURL);
     CHECK_PROPERTY_CHANGE(PROP_MAX_FPS, maxFPS);
     CHECK_PROPERTY_CHANGE(PROP_INPUT_MODE, inputMode);
+    CHECK_PROPERTY_CHANGE(PROP_WANTS_KEYBOARD_FOCUS, wantsKeyboardFocus);
     CHECK_PROPERTY_CHANGE(PROP_SHOW_KEYBOARD_FOCUS_HIGHLIGHT, showKeyboardFocusHighlight);
     CHECK_PROPERTY_CHANGE(PROP_WEB_USE_BACKGROUND, useBackground);
     CHECK_PROPERTY_CHANGE(PROP_USER_AGENT, userAgent);
@@ -1425,6 +1426,8 @@ EntityPropertyFlags EntityItemProperties::getChangedProperties() const {
  * @property {string} scriptURL="" - The URL of a JavaScript file to inject into the web page.
  * @property {number} maxFPS=10 - The maximum update rate for the web content, in frames/second.
  * @property {WebInputMode} inputMode="touch" - The user input mode to use.
+ * @property {boolean} wantsKeyboardFocus=true - <code>true</code> if the entity should capture keyboard focus, <code>false</code> if it
+ *     shouldn't.
  * @property {boolean} showKeyboardFocusHighlight=true - <code>true</code> if the entity is highlighted when it has keyboard
  *     focus, <code>false</code> if it isn't.
  * @property {boolean} useBackground=true - <code>true</code> if the web entity should have a background,
@@ -1857,6 +1860,7 @@ ScriptValue EntityItemProperties::copyToScriptValue(ScriptEngine* engine, bool s
         COPY_PROPERTY_TO_QSCRIPTVALUE_IF_URL_PERMISSION(PROP_SCRIPT_URL, scriptURL);
         COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_MAX_FPS, maxFPS);
         COPY_PROPERTY_TO_QSCRIPTVALUE_GETTER(PROP_INPUT_MODE, inputMode, getInputModeAsString());
+        COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_WANTS_KEYBOARD_FOCUS, wantsKeyboardFocus);
         COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_SHOW_KEYBOARD_FOCUS_HIGHLIGHT, showKeyboardFocusHighlight);
         COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_WEB_USE_BACKGROUND, useBackground);
         COPY_PROPERTY_TO_QSCRIPTVALUE(PROP_USER_AGENT, userAgent);
@@ -2239,6 +2243,7 @@ void EntityItemProperties::copyFromScriptValue(const ScriptValue& object, bool h
     COPY_PROPERTY_FROM_QSCRIPTVALUE(scriptURL, QString, setScriptURL);
     COPY_PROPERTY_FROM_QSCRIPTVALUE(maxFPS, uint8_t, setMaxFPS);
     COPY_PROPERTY_FROM_QSCRIPTVALUE_ENUM(inputMode, InputMode);
+    COPY_PROPERTY_FROM_QSCRIPTVALUE(wantsKeyboardFocus, bool, setWantsKeyboardFocus);
     COPY_PROPERTY_FROM_QSCRIPTVALUE(showKeyboardFocusHighlight, bool, setShowKeyboardFocusHighlight);
     COPY_PROPERTY_FROM_QSCRIPTVALUE(useBackground, bool, setUseBackground);
     COPY_PROPERTY_FROM_QSCRIPTVALUE(userAgent, QString, setUserAgent);
@@ -2523,6 +2528,7 @@ void EntityItemProperties::merge(const EntityItemProperties& other) {
     COPY_PROPERTY_IF_CHANGED(scriptURL);
     COPY_PROPERTY_IF_CHANGED(maxFPS);
     COPY_PROPERTY_IF_CHANGED(inputMode);
+    COPY_PROPERTY_IF_CHANGED(wantsKeyboardFocus);
     COPY_PROPERTY_IF_CHANGED(showKeyboardFocusHighlight);
     COPY_PROPERTY_IF_CHANGED(useBackground);
     COPY_PROPERTY_IF_CHANGED(userAgent);
@@ -2918,6 +2924,7 @@ bool EntityItemProperties::getPropertyInfo(const QString& propertyName, EntityPr
         ADD_PROPERTY_TO_MAP(PROP_SCRIPT_URL, ScriptURL, scriptURL, QString);
         ADD_PROPERTY_TO_MAP(PROP_MAX_FPS, MaxFPS, maxFPS, uint8_t);
         ADD_PROPERTY_TO_MAP(PROP_INPUT_MODE, InputMode, inputMode, WebInputMode);
+        ADD_PROPERTY_TO_MAP(PROP_WANTS_KEYBOARD_FOCUS, WantsKeyboardFocus, wantsKeyboardFocus, bool);
         ADD_PROPERTY_TO_MAP(PROP_SHOW_KEYBOARD_FOCUS_HIGHLIGHT, ShowKeyboardFocusHighlight, showKeyboardFocusHighlight, bool);
         ADD_PROPERTY_TO_MAP(PROP_WEB_USE_BACKGROUND, useBackground, useBackground, bool);
         ADD_PROPERTY_TO_MAP(PROP_USER_AGENT, UserAgent, userAgent, QString);
@@ -3341,6 +3348,7 @@ OctreeElement::AppendState EntityItemProperties::encodeEntityEditPacket(PacketTy
                 APPEND_ENTITY_PROPERTY(PROP_SCRIPT_URL, properties.getScriptURL());
                 APPEND_ENTITY_PROPERTY(PROP_MAX_FPS, properties.getMaxFPS());
                 APPEND_ENTITY_PROPERTY(PROP_INPUT_MODE, (uint32_t)properties.getInputMode());
+                APPEND_ENTITY_PROPERTY(PROP_SHOW_KEYBOARD_FOCUS_HIGHLIGHT, properties.getWantsKeyboardFocus());
                 APPEND_ENTITY_PROPERTY(PROP_SHOW_KEYBOARD_FOCUS_HIGHLIGHT, properties.getShowKeyboardFocusHighlight());
                 APPEND_ENTITY_PROPERTY(PROP_WEB_USE_BACKGROUND, properties.getUseBackground());
                 APPEND_ENTITY_PROPERTY(PROP_USER_AGENT, properties.getUserAgent());
@@ -3807,6 +3815,7 @@ bool EntityItemProperties::decodeEntityEditPacket(const unsigned char* data, int
         READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_SCRIPT_URL, QString, setScriptURL);
         READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_MAX_FPS, uint8_t, setMaxFPS);
         READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_INPUT_MODE, WebInputMode, setInputMode);
+        READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_WANTS_KEYBOARD_FOCUS, bool, setWantsKeyboardFocus);
         READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_SHOW_KEYBOARD_FOCUS_HIGHLIGHT, bool, setShowKeyboardFocusHighlight);
         READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_WEB_USE_BACKGROUND, bool, setUseBackground);
         READ_ENTITY_PROPERTY_TO_PROPERTIES(PROP_USER_AGENT, QString, setUserAgent);
@@ -4170,6 +4179,7 @@ void EntityItemProperties::markAllChanged() {
     _scriptURLChanged = true;
     _maxFPSChanged = true;
     _inputModeChanged = true;
+    _wantsKeyboardFocusChanged = true;
     _showKeyboardFocusHighlightChanged = true;
     _useBackgroundChanged = true;
     _userAgentChanged = true;
@@ -4836,6 +4846,9 @@ QList<QString> EntityItemProperties::listChangedProperties() {
     }
     if (faceCameraChanged()) {
         out += "faceCamera";
+    }
+    if (wantsKeyboardFocusChanged()) {
+        out += "wantsKeyboardFocus";
     }
     if (showKeyboardFocusHighlightChanged()) {
         out += "showKeyboardFocusHighlight";
