@@ -52,6 +52,7 @@
 
     var DEFAULT_IMAGE = Script.getExternalPath(Script.ExternalPaths.Assets, "Bazaar/Assets/Textures/Defaults/Interface/default_image.jpg");
     var DEFAULT_PARTICLE = Script.getExternalPath(Script.ExternalPaths.Assets, "Bazaar/Assets/Textures/Defaults/Interface/default_particle.png");
+    var DEFAULT_SOUND = "TODO";
 
     var createToolsWindow = new CreateWindow(
         Script.resolvePath("qml/EditTools.qml"),
@@ -95,8 +96,9 @@
     var SPOT_LIGHT_URL = Script.resolvePath("assets/images/icon-spot-light.svg");
     var ZONE_URL = Script.resolvePath("assets/images/icon-zone.svg");
     var MATERIAL_URL = Script.resolvePath("assets/images/icon-material.svg");
+    var SOUND_URL = Script.resolvePath("assets/images/icon-sound.svg");
 
-    var entityIconOverlayManager = new EntityIconOverlayManager(["Light", "ParticleEffect", "ProceduralParticleEffect", "Zone", "Material"], function(entityID) {
+    var entityIconOverlayManager = new EntityIconOverlayManager(["Light", "ParticleEffect", "ProceduralParticleEffect", "Zone", "Material", "Sound"], function(entityID) {
         var properties = Entities.getEntityProperties(entityID, ["type", "isSpotlight", "parentID", "name"]);
         if (properties.type === "Light") {
             return {
@@ -110,6 +112,8 @@
             } else {
                 return { imageURL: "" };
             }
+        } else if (properties.type === "Sound") {
+            return { imageURL: SOUND_URL, rotation: Quat.fromPitchYawRollDegrees(0, 0, 0) };
         } else {
             return { imageURL: PARTICLE_SYSTEM_URL };
         }
@@ -530,6 +534,9 @@
             exponent: 1.0,
             cutoff: 75.0,
         },
+        Sound: {
+            soundURL: DEFAULT_SOUND
+        },
     };
 
     var toolBar = (function () {
@@ -610,7 +617,7 @@
                     if (Menu.isOptionChecked(MENU_CREATE_ENTITIES_GRABBABLE) &&
                         !(properties.type === "Zone" || properties.type === "Light"
                             || properties.type === "ParticleEffect" || properties.type == "ProceduralParticleEffect"
-                            || properties.type === "Web")) {
+                            || properties.type === "Sound"|| properties.type === "Web")) {
                         properties.grab.grabbable = true;
                     } else {
                         properties.grab.grabbable = false;
@@ -1105,6 +1112,12 @@
             addButton("newMaterialButton", createNewEntityDialogButtonCallback("Material"));
 
             addButton("newPolyVoxButton", createNewEntityDialogButtonCallback("PolyVox"));
+
+            addButton("newSoundButton", function () {
+                createNewEntity({
+                    type: "Sound",
+                });
+            });
 
             var deactivateCreateIfDesktopWindowsHidden = function() {
                 if (!shouldUseEditTabletApp() && !entityListTool.isVisible() && !createToolsWindow.isVisible()) {
@@ -2092,7 +2105,7 @@
                     var entityParentIDs = [];
 
                     var propType = Entities.getEntityProperties(pastedEntityIDs[0], ["type"]).type;
-                    var NO_ADJUST_ENTITY_TYPES = ["Zone", "Light", "ParticleEffect", "ProceduralParticleEffect"];
+                    var NO_ADJUST_ENTITY_TYPES = ["Zone", "Light", "Sound", "ParticleEffect", "ProceduralParticleEffect"];
                     if (NO_ADJUST_ENTITY_TYPES.indexOf(propType) === -1) {
                         var targetDirection;
                         if (Camera.mode === "entity" || Camera.mode === "independent") {
