@@ -69,6 +69,7 @@ void EntityScriptServerLogClient::handleEntityServerScriptLogPacket(QSharedPoint
     QString messageText = QString::fromUtf8(message->readAll());
     QJsonParseError error;
     QJsonDocument document = QJsonDocument::fromJson(messageText.toUtf8(), &error);
+    emit receivedNewLogLines(messageText);
     if(document.isNull()) {
         qWarning() << "EntityScriptServerLogClient::handleEntityServerScriptLogPacket: Cannot parse JSON: " << error.errorString()
             << " Contents: " << messageText;

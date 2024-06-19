@@ -65,6 +65,7 @@ public:
     bool passesZoneOcclusionTest(const std::unordered_set<QUuid>& containingZones) const;
     render::HighlightStyle getOutlineStyle(const ViewFrustum& viewFrustum, const size_t height) const;
     render::ItemID computeMirrorView(ViewFrustum& viewFrustum) const;
+    render::HighlightStyle getOutlineStyle(const ViewFrustum& viewFrustum, const size_t height) const;
 
     void addMaterial(graphics::MaterialLayer material) { _drawMaterials.push(material); }
     void removeMaterial(graphics::MaterialPointer material) { _drawMaterials.remove(material); }

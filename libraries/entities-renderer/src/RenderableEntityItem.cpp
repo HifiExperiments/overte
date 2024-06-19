@@ -345,6 +345,20 @@ ItemID EntityRenderer::computeMirrorViewOperator(ViewFrustum& viewFrustum, const
     return foundPortalExit ? DependencyManager::get<EntityTreeRenderer>()->renderableIdForEntityId(portalExitID) : Item::INVALID_ITEM_ID;
 }
 
+HighlightStyle EntityRenderer::getOutlineStyle(const ViewFrustum& viewFrustum, const size_t height) const {
+    std::lock_guard<std::mutex> lock(_materialsLock);
+    auto materials = _materials.find("0");
+    if (materials != _materials.end()) {
+        glm::vec3 position;
+        withReadLock([&] {
+            position = _renderTransform.getTranslation();
+        });
+        return HighlightStyle::calculateOutlineStyle(materials->second.getOutlineWidthMode(), materials->second.getOutlineWidth(),
+                                                     materials->second.getOutline(), position, viewFrustum, height);
+    }
+    return HighlightStyle();
+}
+
 void EntityRenderer::render(RenderArgs* args) {
     if (!isValidRenderItem()) {
         return;

@@ -172,18 +172,8 @@ bool ParticleEffectEntityRenderer::isTransparent() const {
 }
 
 ItemKey ParticleEffectEntityRenderer::getKey() {
-    auto builder = ItemKey::Builder::transparentShape().withTagBits(getTagMask()).withLayer(getHifiRenderLayer());
-
-    if (!_visible) {
-        builder.withInvisible();
-    }
-
-    if (_cullWithParent) {
-        builder.withSubMetaCulled();
-    }
-
+    auto builder = ItemKey::Builder(Parent::getKey());
     builder.withSimulate();
-
     return builder.build();
 }
 

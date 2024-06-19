@@ -230,6 +230,10 @@ void ModelMeshPartPayload::updateKey(const render::ItemKey& key) {
         builder.withMirror();
     }
 
+    if (_drawMaterials.hasOutline()) {
+        builder.withOutline();
+    }
+
     _itemKey = builder.build();
 }
 
@@ -409,6 +413,11 @@ ItemID ModelMeshPartPayload::computeMirrorView(ViewFrustum& viewFrustum) const {
     return MirrorModeHelpers::computeMirrorView(viewFrustum, transform.getTranslation(), transform.getRotation(), _mirrorMode, _portalExitID);
 }
 
+render::HighlightStyle ModelMeshPartPayload::getOutlineStyle(const ViewFrustum& viewFrustum, const size_t height) const {
+    return render::HighlightStyle::calculateOutlineStyle(_drawMaterials.getOutlineWidthMode(), _drawMaterials.getOutlineWidth(), _drawMaterials.getOutline(),
+                                                         _parentTransform.getTranslation(), viewFrustum, height);
+}
+
 void ModelMeshPartPayload::setBlendshapeBuffer(const std::unordered_map<int, gpu::BufferPointer>& blendshapeBuffers, const QVector<int>& blendedMeshSizes) {
     if (_meshIndex < blendedMeshSizes.length() && blendedMeshSizes.at(_meshIndex) == _meshNumVertices) {
         auto blendshapeBuffer = blendshapeBuffers.find(_meshIndex);
@@ -471,5 +480,12 @@ template <> ItemID payloadComputeMirrorView(const ModelMeshPartPayload::Pointer&
         return payload->computeMirrorView(viewFrustum);
     }
     return Item::INVALID_ITEM_ID;
+}
+
+template <> HighlightStyle payloadGetOutlineStyle(const ModelMeshPartPayload::Pointer& payload, const ViewFrustum& viewFrustum, const size_t height) {
+    if (payload) {
+        return payload->getOutlineStyle(viewFrustum, height);
+    }
+    return HighlightStyle();
 }
 }

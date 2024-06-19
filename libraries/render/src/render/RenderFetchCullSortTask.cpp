@@ -89,7 +89,7 @@ void RenderFetchCullSortTask::build(JobModel& task, const Varying& input, Varyin
 
     task.addJob<ClearContainingZones>("ClearContainingZones");
 
-    output = Output(BucketList{ opaques, transparents, lights, metas, filteredSpatialBuckets[OUTLINE_BUCKET], mirrors, simulate,
+    output = Output(BucketList{ opaques, transparents, lights, metas, mirrors, simulate, filteredSpatialBuckets[OUTLINE_BUCKET],
                     filteredLayeredOpaque.getN<FilterLayeredItems::Outputs>(0), filteredLayeredTransparent.getN<FilterLayeredItems::Outputs>(0),
                     filteredLayeredOpaque.getN<FilterLayeredItems::Outputs>(1), filteredLayeredTransparent.getN<FilterLayeredItems::Outputs>(1),
                     background }, spatialSelection);

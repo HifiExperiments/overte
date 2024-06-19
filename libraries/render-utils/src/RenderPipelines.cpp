@@ -47,6 +47,7 @@ void initForwardPipelines(ShapePlumber& plumber);
 void initZPassPipelines(ShapePlumber& plumber, gpu::StatePointer state, const render::ShapePipeline::BatchSetter& batchSetter, const render::ShapePipeline::ItemSetter& itemSetter);
 void sortAndRenderZPassShapes(const ShapePlumberPointer& shapePlumber, const render::RenderContextPointer& renderContext, const render::ShapeBounds& inShapes, render::ItemBounds &itemBounds);
 void initMirrorPipelines(ShapePlumber& plumber, gpu::StatePointer state, const render::ShapePipeline::BatchSetter& batchSetter, const render::ShapePipeline::ItemSetter& itemSetter, bool forward);
+void sortAndRenderZPassShapes(const ShapePlumberPointer& shapePlumber, const render::RenderContextPointer& renderContext, const render::ShapeBounds& inShapes, render::ItemBounds &itemBounds);
 
 void addPlumberPipeline(ShapePlumber& plumber,
         const ShapeKey& key, int programId, gpu::StatePointer& baseState,

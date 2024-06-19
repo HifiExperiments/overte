@@ -182,4 +182,11 @@ namespace render {
         }
         return payload->computeMirrorView(viewFrustum);
     }
+
+    template <> HighlightStyle payloadGetOutlineStyle(const PayloadProxyInterface::Pointer& payload, const ViewFrustum& viewFrustum, const size_t height) {
+        if (!payload) {
+            return HighlightStyle();
+        }
+        return payload->getOutlineStyle(viewFrustum, height);
+    }
 }

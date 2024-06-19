@@ -31,6 +31,7 @@ protected:
     virtual void doRenderUpdateAsynchronousTyped(const TypedEntityPointer& entity) override;
 
     bool isTransparent() const override;
+    virtual ItemKey getKey() override;
     virtual ShapeKey getShapeKey() override;
     virtual Item::Bound getBound(RenderArgs* args) override;
     virtual void doRender(RenderArgs* args) override;

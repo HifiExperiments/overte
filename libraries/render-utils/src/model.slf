@@ -19,6 +19,9 @@
 <@if HIFI_USE_MTOON@>
     <@if HIFI_USE_SHADOW@>
         <$declareMToonMaterialTextures(ALBEDO)$>
+        <@if HIFI_USE_MIRROR@>
+            LAYOUT(binding=GRAPHICS_TEXTURE_MATERIAL_MIRROR) uniform sampler2D mirrorMap;
+        <@endif@>
     <@else@>
         <$declareMToonMaterialTextures(ALBEDO, HIFI_USE_NORMALMAP, SHADE, EMISSIVE, SHADING_SHIFT, MATCAP, RIM, UV_ANIMATION_MASK)$>
     <@endif@>
