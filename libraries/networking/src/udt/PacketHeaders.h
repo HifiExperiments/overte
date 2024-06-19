@@ -355,6 +355,7 @@ enum class EntityVersion : PacketVersion {
     AudioZones,
     ProceduralParticles,
     AnimationSmoothFrames,
+    AmbientColor,
 
     // Add new versions above here
     NUM_PACKET_TYPE,
