@@ -423,7 +423,8 @@ enum class AvatarMixerPacketVersion : PacketVersion {
     FBXJointOrderChange,
     HandControllerSection,
     SendVerificationFailed,
-    ARKitBlendshapes
+    ARKitBlendshapes,
+    RemoveAttachments,
 };
 
 enum class DomainConnectRequestVersion : PacketVersion {
