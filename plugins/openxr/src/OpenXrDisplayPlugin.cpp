@@ -2,6 +2,7 @@
 // Overte OpenXR Plugin
 //
 // Copyright 2024 Lubosz Sarnecki
+// Copyright 2024 Overte e.V.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -15,6 +16,11 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/transform.hpp>
 #include <thread>
+
+#if defined(Q_OS_WIN)
+#undef near
+#undef far
+#endif
 
 Q_DECLARE_LOGGING_CATEGORY(xr_display_cat)
 Q_LOGGING_CATEGORY(xr_display_cat, "openxr.display")
@@ -94,10 +100,12 @@ bool OpenXrDisplayPlugin::initViews() {
     assert(_viewCount != 0);
 
     for (uint32_t i = 0; i < _viewCount; i++) {
-        XrView view = { .type = XR_TYPE_VIEW };
+        XrView view;
+        view.type = XR_TYPE_VIEW;
         _views.push_back(view);
 
-        XrViewConfigurationView viewConfig = { .type = XR_TYPE_VIEW_CONFIGURATION_VIEW };
+        XrViewConfigurationView viewConfig;
+        viewConfig.type = XR_TYPE_VIEW_CONFIGURATION_VIEW;
         _viewConfigs.push_back(viewConfig);
     }
 
@@ -173,18 +181,17 @@ bool OpenXrDisplayPlugin::initSwapChains() {
     for (uint32_t i = 0; i < _viewCount; i++) {
         _images[i].clear();
 
-        XrSwapchainCreateInfo info = {
-            .type = XR_TYPE_SWAPCHAIN_CREATE_INFO,
-            .createFlags = 0,
-            .usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT,
-            .format = format,
-            .sampleCount = _viewConfigs[i].recommendedSwapchainSampleCount,
-            .width = _viewConfigs[i].recommendedImageRectWidth,
-            .height = _viewConfigs[i].recommendedImageRectHeight,
-            .faceCount = 1,
-            .arraySize = 1,
-            .mipCount = 1,
-        };
+        XrSwapchainCreateInfo info;
+        info.type = XR_TYPE_SWAPCHAIN_CREATE_INFO;
+        info.createFlags = 0;
+        info.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
+        info.format = format;
+        info.sampleCount = _viewConfigs[i].recommendedSwapchainSampleCount;
+        info.width = _viewConfigs[i].recommendedImageRectWidth;
+        info.height = _viewConfigs[i].recommendedImageRectHeight;
+        info.faceCount = 1;
+        info.arraySize = 1;
+        info.mipCount = 1;
 
         XrResult result = xrCreateSwapchain(session, &info, &_swapChains[i]);
         if (!xrCheck(instance, result, "Failed to create swapchain!"))
@@ -195,7 +202,8 @@ bool OpenXrDisplayPlugin::initSwapChains() {
             return false;
 
         for (uint32_t j = 0; j < _swapChainLengths[i]; j++) {
-            XrSwapchainImageOpenGLKHR image = { .type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR };
+            XrSwapchainImageOpenGLKHR image;
+            info.type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR;
             _images[i].push_back(image);
         }
         result = xrEnumerateSwapchainImages(_swapChains[i], _swapChainLengths[i], &_swapChainLengths[i],
@@ -209,22 +217,12 @@ bool OpenXrDisplayPlugin::initSwapChains() {
 
 bool OpenXrDisplayPlugin::initLayers() {
     for (uint32_t i = 0; i < _viewCount; i++) {
-        XrCompositionLayerProjectionView layer = {
-            .type = XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW,
-            .subImage = {
-                .swapchain = _swapChains[i],
-                .imageRect = {
-                    .offset = {
-                        .x = 0,
-                        .y = 0,
-                    },
-                    .extent = {
-                        .width = (int32_t)_viewConfigs[i].recommendedImageRectWidth,
-                        .height = (int32_t)_viewConfigs[i].recommendedImageRectHeight,
-                    },
-                },
-                .imageArrayIndex = 0,
-            },
+        XrCompositionLayerProjectionView layer;
+        layer.type = XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW;
+        layer.subImage = {
+            _swapChains[i],
+            { { 0, 0 }, { (int32_t)_viewConfigs[i].recommendedImageRectWidth, (int32_t)_viewConfigs[i].recommendedImageRectHeight } },
+            0
         };
         _projectionLayerViews.push_back(layer);
     };
@@ -264,7 +262,7 @@ void OpenXrDisplayPlugin::internalDeactivate() {
     // We can get into a state where activate -> deactivate -> activate is called in a chain.
     // We are probably gonna have a bad time then. At least check if the session is already running.
     // This happens when the application decides to switch display plugins back and forth. This should
-    // prbably be fixed there.
+    // probably be fixed there.
     if (_context->_isSessionRunning) {
         if (!_context->requestExitSession()) {
             qCCritical(xr_display_cat, "Failed to request exit session");
@@ -347,7 +345,8 @@ bool OpenXrDisplayPlugin::beginFrameRender(uint32_t frameIndex) {
         }
     }
 
-    _lastFrameState = { .type = XR_TYPE_FRAME_STATE };
+    _lastFrameState = XrFrameState();
+    _lastFrameState.type = XR_TYPE_FRAME_STATE;
     XrResult result = xrWaitFrame(_context->_session, nullptr, &_lastFrameState);
 
     if (!xrCheck(_context->_instance, result, "xrWaitFrame failed"))
@@ -365,14 +364,14 @@ bool OpenXrDisplayPlugin::beginFrameRender(uint32_t frameIndex) {
     }
 
     // TODO: Probably shouldn't call xrLocateViews twice. Use only view space views?
-    XrViewLocateInfo eyeViewLocateInfo = {
-        .type = XR_TYPE_VIEW_LOCATE_INFO,
-        .viewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO,
-        .displayTime = _lastFrameState.predictedDisplayTime,
-        .space = _context->_viewSpace,
-    };
+    XrViewLocateInfo eyeViewLocateInfo;
+    eyeViewLocateInfo.type = XR_TYPE_VIEW_LOCATE_INFO;
+    eyeViewLocateInfo.viewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
+    eyeViewLocateInfo.displayTime = _lastFrameState.predictedDisplayTime;
+    eyeViewLocateInfo.space = _context->_viewSpace;
 
-    XrViewState eyeViewState = { .type = XR_TYPE_VIEW_STATE };
+    XrViewState eyeViewState;
+    eyeViewState.type = XR_TYPE_VIEW_STATE;
 
     result = xrLocateViews(_context->_session, &eyeViewLocateInfo, &eyeViewState, _viewCount, &_viewCount, eye_views.data());
     if (!xrCheck(_context->_instance, result, "Could not locate views"))
@@ -384,14 +383,14 @@ bool OpenXrDisplayPlugin::beginFrameRender(uint32_t frameIndex) {
         _eyeOffsets[i] = controller::Pose(eyePosition, eyeOrientation).getMatrix();
     }
 
-    _lastViewState = { .type = XR_TYPE_VIEW_STATE };
+    _lastViewState = XrViewState();
+    _lastViewState.type = XR_TYPE_VIEW_STATE;
 
-    XrViewLocateInfo viewLocateInfo = {
-        .type = XR_TYPE_VIEW_LOCATE_INFO,
-        .viewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO,
-        .displayTime = _lastFrameState.predictedDisplayTime,
-        .space = _context->_stageSpace,
-    };
+    XrViewLocateInfo viewLocateInfo;
+    viewLocateInfo.type = XR_TYPE_VIEW_LOCATE_INFO;
+    viewLocateInfo.viewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
+    viewLocateInfo.displayTime = _lastFrameState.predictedDisplayTime;
+    viewLocateInfo.space = _context->_stageSpace;
 
     result = xrLocateViews(_context->_session, &viewLocateInfo, &_lastViewState, _viewCount, &_viewCount, _views.data());
     if (!xrCheck(_context->_instance, result, "Could not locate views"))
@@ -404,10 +403,9 @@ bool OpenXrDisplayPlugin::beginFrameRender(uint32_t frameIndex) {
 
     _viewsInitialized = true;
 
-    XrSpaceLocation headLocation = {
-        .type = XR_TYPE_SPACE_LOCATION,
-        .pose = XR_INDENTITY_POSE,
-    };
+    XrSpaceLocation headLocation;
+    headLocation.type = XR_TYPE_SPACE_LOCATION;
+    headLocation.pose = XR_INDENTITY_POSE;
     xrLocateSpace(_context->_viewSpace, _context->_stageSpace, _lastFrameState.predictedDisplayTime, &headLocation);
 
     glm::vec3 headPosition = xrVecToGlm(headLocation.pose.position);
@@ -451,13 +449,16 @@ void OpenXrDisplayPlugin::hmdPresent() {
     if (_lastFrameState.shouldRender) {
         // TODO: Use multiview swapchain
         for (uint32_t i = 0; i < 2; i++) {
-            XrSwapchainImageAcquireInfo acquireInfo = { .type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO };
+            XrSwapchainImageAcquireInfo acquireInfo;
+            acquireInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO;
 
             XrResult result = xrAcquireSwapchainImage(_swapChains[i], &acquireInfo, &_swapChainIndices[i]);
             if (!xrCheck(_context->_instance, result, "failed to acquire swapchain image!"))
                 return;
 
-            XrSwapchainImageWaitInfo waitInfo = { .type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO, .timeout = 1000 };
+            XrSwapchainImageWaitInfo waitInfo;
+            waitInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO;
+            waitInfo.timeout = 1000;
             result = xrWaitSwapchainImage(_swapChains[i], &waitInfo);
             if (!xrCheck(_context->_instance, result, "failed to wait for swapchain image!"))
                 return;
@@ -472,7 +473,8 @@ void OpenXrDisplayPlugin::hmdPresent() {
                            GL_TEXTURE_2D, 0, 0, 0, 0, _renderTargetSize.x / 2, _renderTargetSize.y, 1);
 
         for (uint32_t i = 0; i < 2; i++) {
-            XrSwapchainImageReleaseInfo releaseInfo = { .type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO };
+            XrSwapchainImageReleaseInfo releaseInfo;
+            releaseInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO;
             XrResult result = xrReleaseSwapchainImage(_swapChains[i], &releaseInfo);
             if (!xrCheck(_context->_instance, result, "failed to release swapchain image!")) {
                 assert(false);
@@ -492,25 +494,23 @@ void OpenXrDisplayPlugin::hmdPresent() {
 }
 
 bool OpenXrDisplayPlugin::endFrame() {
-    XrCompositionLayerProjection projectionLayer = {
-        .type = XR_TYPE_COMPOSITION_LAYER_PROJECTION,
-        .layerFlags = 0,
-        .space = _context->_stageSpace,
-        .viewCount = _viewCount,
-        .views = _projectionLayerViews.data(),
-    };
+    XrCompositionLayerProjection projectionLayer;
+    projectionLayer.type = XR_TYPE_COMPOSITION_LAYER_PROJECTION;
+    projectionLayer.layerFlags = 0;
+    projectionLayer.space = _context->_stageSpace;
+    projectionLayer.viewCount = _viewCount;
+    projectionLayer.views = _projectionLayerViews.data();
 
     std::vector<const XrCompositionLayerBaseHeader*> layers = {
         (const XrCompositionLayerBaseHeader*)&projectionLayer,
     };
 
-    XrFrameEndInfo info = {
-        .type = XR_TYPE_FRAME_END_INFO,
-        .displayTime = _lastFrameState.predictedDisplayTime,
-        .environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_OPAQUE,
-        .layerCount = (uint32_t)layers.size(),
-        .layers = layers.data(),
-    };
+    XrFrameEndInfo info;
+    info.type = XR_TYPE_FRAME_END_INFO;
+    info.displayTime = _lastFrameState.predictedDisplayTime;
+    info.environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_OPAQUE;
+    info.layerCount = (uint32_t)layers.size();
+    info.layers = layers.data();
 
     if ((_lastViewState.viewStateFlags & XR_VIEW_STATE_ORIENTATION_VALID_BIT) == 0) {
         qCWarning(xr_display_cat, "Not submitting layers because orientation is invalid.");

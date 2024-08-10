@@ -2,6 +2,7 @@
 // Overte OpenXR Plugin
 //
 // Copyright 2024 Lubosz Sarnecki
+// Copyright 2024 Overte e.V.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -132,12 +133,11 @@ bool OpenXrInputPlugin::InputDevice::triggerHapticPulse(float strength, float du
 
 bool OpenXrInputPlugin::Action::init(XrActionSet actionSet) {
     XrInstance instance = _context->_instance;
-    XrActionCreateInfo info = {
-        .type = XR_TYPE_ACTION_CREATE_INFO,
-        .actionType = _type,
-        .countSubactionPaths = HAND_COUNT,
-        .subactionPaths = _context->_handPaths,
-    };
+    XrActionCreateInfo info;
+    info.type = XR_TYPE_ACTION_CREATE_INFO;
+    info.actionType = _type;
+    info.countSubactionPaths = HAND_COUNT;
+    info.subactionPaths = _context->_handPaths;
 
     QString name = QString::fromStdString(_path);
     name.replace("/input/", "");
@@ -170,22 +170,20 @@ std::vector<XrActionSuggestedBinding> OpenXrInputPlugin::Action::getBindings() {
         XrPath path;
         std::string pathString = "/user/hand/" + HAND_PATHS[i] + _path;
         xrStringToPath(_context->_instance, pathString.c_str(), &path);
-        XrActionSuggestedBinding binding = { .action = _action, .binding = path };
+        XrActionSuggestedBinding binding = { _action, path };
         bindings.push_back(binding);
     }
     return bindings;
 }
 
 XrActionStateFloat OpenXrInputPlugin::Action::getFloat(uint32_t handId) {
-    XrActionStateFloat state = {
-        .type = XR_TYPE_ACTION_STATE_FLOAT,
-    };
+    XrActionStateFloat state;
+    state.type = XR_TYPE_ACTION_STATE_FLOAT;
 
-    XrActionStateGetInfo info = {
-        .type = XR_TYPE_ACTION_STATE_GET_INFO,
-        .action = _action,
-        .subactionPath = _context->_handPaths[handId],
-    };
+    XrActionStateGetInfo info;
+    info.type = XR_TYPE_ACTION_STATE_GET_INFO;
+    info.action = _action;
+    info.subactionPath = _context->_handPaths[handId];
 
     XrResult result = xrGetActionStateFloat(_context->_session, &info, &state);
     xrCheck(_context->_instance, result, "Failed to get float state!");
@@ -194,15 +192,13 @@ XrActionStateFloat OpenXrInputPlugin::Action::getFloat(uint32_t handId) {
 }
 
 XrActionStateBoolean OpenXrInputPlugin::Action::getBool(uint32_t handId) {
-    XrActionStateBoolean state = {
-        .type = XR_TYPE_ACTION_STATE_BOOLEAN,
-    };
+    XrActionStateBoolean state;
+    state.type = XR_TYPE_ACTION_STATE_BOOLEAN;
 
-    XrActionStateGetInfo info = {
-        .type = XR_TYPE_ACTION_STATE_GET_INFO,
-        .action = _action,
-        .subactionPath = _context->_handPaths[handId],
-    };
+    XrActionStateGetInfo info;
+    info.type = XR_TYPE_ACTION_STATE_GET_INFO;
+    info.action = _action;
+    info.subactionPath = _context->_handPaths[handId];
 
     XrResult result = xrGetActionStateBoolean(_context->_session, &info, &state);
     xrCheck(_context->_instance, result, "Failed to get float state!");
@@ -211,21 +207,18 @@ XrActionStateBoolean OpenXrInputPlugin::Action::getBool(uint32_t handId) {
 }
 
 XrSpaceLocation OpenXrInputPlugin::Action::getPose(uint32_t handId) {
-    XrActionStatePose state = {
-        .type = XR_TYPE_ACTION_STATE_POSE,
-    };
-    XrActionStateGetInfo info = {
-        .type = XR_TYPE_ACTION_STATE_GET_INFO,
-        .action = _action,
-        .subactionPath = _context->_handPaths[handId],
-    };
+    XrActionStatePose state;
+    state.type = XR_TYPE_ACTION_STATE_POSE;
+    XrActionStateGetInfo info;
+    info.type = XR_TYPE_ACTION_STATE_GET_INFO;
+    info.action = _action;
+    info.subactionPath = _context->_handPaths[handId];
 
     XrResult result = xrGetActionStatePose(_context->_session, &info, &state);
     xrCheck(_context->_instance, result, "failed to get pose value!");
 
-    XrSpaceLocation location = {
-        .type = XR_TYPE_SPACE_LOCATION,
-    };
+    XrSpaceLocation location;
+    location.type = XR_TYPE_SPACE_LOCATION;
 
     if (_context->_lastPredictedDisplayTimeInitialized) {
         result = xrLocateSpace(_poseSpaces[handId], _context->_stageSpace, _context->_lastPredictedDisplayTime, &location);
@@ -236,18 +229,17 @@ XrSpaceLocation OpenXrInputPlugin::Action::getPose(uint32_t handId) {
 }
 
 bool OpenXrInputPlugin::Action::applyHaptic(uint32_t handId, XrDuration duration, float frequency, float amplitude) {
-    XrHapticVibration vibration = {
-        .type = XR_TYPE_HAPTIC_VIBRATION,
-        .duration = duration,
-        .frequency = frequency,
-        .amplitude = amplitude,
-    };
+    XrHapticVibration vibration;
+    vibration.type = XR_TYPE_HAPTIC_VIBRATION;
+    vibration.duration = duration;
+    vibration.frequency = frequency;
+    vibration.amplitude = amplitude;
 
-    XrHapticActionInfo haptic_action_info = {
-        .type = XR_TYPE_HAPTIC_ACTION_INFO,
-        .action = _action,
-        .subactionPath = _context->_handPaths[handId],
-    };
+    XrHapticActionInfo haptic_action_info;
+    haptic_action_info.type = XR_TYPE_HAPTIC_ACTION_INFO;
+    haptic_action_info.action = _action;
+    haptic_action_info.subactionPath = _context->_handPaths[handId];
+
     XrResult result = xrApplyHapticFeedback(_context->_session, &haptic_action_info, (const XrHapticBaseHeader*)&vibration);
 
     return xrCheck(_context->_instance, result, "Failed to apply haptic feedback!");
@@ -257,12 +249,11 @@ bool OpenXrInputPlugin::Action::createPoseSpaces() {
     assert(_action != XR_NULL_HANDLE);
 
     for (int hand = 0; hand < HAND_COUNT; hand++) {
-        XrActionSpaceCreateInfo info = {
-            .type = XR_TYPE_ACTION_SPACE_CREATE_INFO,
-            .action = _action,
-            .subactionPath = _context->_handPaths[hand],
-            .poseInActionSpace = XR_INDENTITY_POSE,
-        };
+        XrActionSpaceCreateInfo info;
+        info.type = XR_TYPE_ACTION_SPACE_CREATE_INFO;
+        info.action = _action;
+        info.subactionPath = _context->_handPaths[hand];
+        info.poseInActionSpace = XR_INDENTITY_POSE;
 
         XrResult result = xrCreateActionSpace(_context->_session, &info, &_poseSpaces[hand]);
         if (!xrCheck(_context->_instance, result, "Failed to create hand pose space"))
@@ -285,12 +276,11 @@ bool OpenXrInputPlugin::InputDevice::initBindings(const std::string& profileName
         bindings.insert(std::end(bindings), std::begin(actionBindings), std::end(actionBindings));
     }
 
-    const XrInteractionProfileSuggestedBinding suggestedBinding = {
-        .type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING,
-        .interactionProfile = profilePath,
-        .countSuggestedBindings = (uint32_t)bindings.size(),
-        .suggestedBindings = bindings.data(),
-    };
+    XrInteractionProfileSuggestedBinding suggestedBinding;
+    suggestedBinding.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
+    suggestedBinding.interactionProfile = profilePath;
+    suggestedBinding.countSuggestedBindings = (uint32_t)bindings.size();
+    suggestedBinding.suggestedBindings = bindings.data();
 
     result = xrSuggestInteractionProfileBindings(_context->_instance, &suggestedBinding);
 
@@ -354,12 +344,12 @@ bool OpenXrInputPlugin::InputDevice::initActions() {
 
     XrInstance instance = _context->_instance;
 
-    XrActionSetCreateInfo actionSetInfo = {
-        .type = XR_TYPE_ACTION_SET_CREATE_INFO,
-        .actionSetName = "action_set",
-        .localizedActionSetName = "Action Set",
-        .priority = 0,
-    };
+    XrActionSetCreateInfo actionSetInfo;
+    actionSetInfo.type = XR_TYPE_ACTION_SET_CREATE_INFO;
+    strcpy(actionSetInfo.actionSetName, "action_set");
+    strcpy(actionSetInfo.localizedActionSetName, "Action Set");
+    actionSetInfo.priority = 0;
+
     XrResult result = xrCreateActionSet(instance, &actionSetInfo, &_actionSet);
     if (!xrCheck(instance, result, "Failed to create action set."))
         return false;
@@ -428,11 +418,10 @@ bool OpenXrInputPlugin::InputDevice::initActions() {
         qCCritical(xr_input_cat, "Failed to init bindings.");
     }
 
-    XrSessionActionSetsAttachInfo attachInfo = {
-        .type = XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO,
-        .countActionSets = 1,
-        .actionSets = &_actionSet,
-    };
+    XrSessionActionSetsAttachInfo attachInfo;
+    attachInfo.type = XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO;
+    attachInfo.countActionSets = 1;
+    attachInfo.actionSets = &_actionSet;
     result = xrAttachSessionActionSets(_context->_session, &attachInfo);
     if (!xrCheck(_context->_instance, result, "Failed to attach action set"))
         return false;
@@ -456,15 +445,13 @@ void OpenXrInputPlugin::InputDevice::update(float deltaTime, const controller::I
         return;
     }
 
-    const XrActiveActionSet active_actionset = {
-        .actionSet = _actionSet,
-    };
+    XrActiveActionSet active_actionset;
+    active_actionset.actionSet = _actionSet;
 
-    XrActionsSyncInfo syncInfo = {
-        .type = XR_TYPE_ACTIONS_SYNC_INFO,
-        .countActiveActionSets = 1,
-        .activeActionSets = &active_actionset,
-    };
+    XrActionsSyncInfo syncInfo;
+    syncInfo.type = XR_TYPE_ACTIONS_SYNC_INFO;
+    syncInfo.countActiveActionSets = 1;
+    syncInfo.activeActionSets = &active_actionset;
 
     XrInstance instance = _context->_instance;
     XrSession session = _context->_session;

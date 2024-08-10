@@ -2,6 +2,7 @@
 // Overte OpenXR Plugin
 //
 // Copyright 2024 Lubosz Sarnecki
+// Copyright 2024 Overte e.V.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -11,17 +12,6 @@
 
 #include <sstream>
 
-#if defined(Q_OS_LINUX)
-  #include <GL/glx.h>
-  #define XR_USE_PLATFORM_XLIB
-#elif defined(Q_OS_WIN)
-  #define XR_USE_PLATFORM_WIN32
-#else
-  #error "Unsupported platform"
-#endif
-
-#define XR_USE_GRAPHICS_API_OPENGL
-#include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
 
 Q_DECLARE_LOGGING_CATEGORY(xr_context_cat)
@@ -85,7 +75,8 @@ bool OpenXrContext::initInstance() {
 
     std::vector<XrExtensionProperties> properties;
     for (uint32_t i = 0; i < count; i++) {
-        XrExtensionProperties props = { .type = XR_TYPE_EXTENSION_PROPERTIES };
+        XrExtensionProperties props;
+        props.type = XR_TYPE_EXTENSION_PROPERTIES;
         properties.push_back(props);
     }
 
@@ -110,18 +101,11 @@ bool OpenXrContext::initInstance() {
 
     std::vector<const char*> enabled = { XR_KHR_OPENGL_ENABLE_EXTENSION_NAME };
 
-    XrInstanceCreateInfo info = {
-      .type = XR_TYPE_INSTANCE_CREATE_INFO,
-      .applicationInfo = {
-          .applicationName = "overte",
-          .applicationVersion = 1,
-          .engineName = "overte",
-          .engineVersion = 0,
-          .apiVersion = XR_CURRENT_API_VERSION,
-      },
-      .enabledExtensionCount = (uint32_t)enabled.size(),
-      .enabledExtensionNames = enabled.data(),
-  };
+    XrInstanceCreateInfo info;
+    info.type = XR_TYPE_INSTANCE_CREATE_INFO;
+    info.applicationInfo = { "overte", 1, "overte", 0, XR_CURRENT_API_VERSION };
+    info.enabledExtensionCount = (uint32_t)enabled.size();
+    info.enabledExtensionNames = enabled.data();
 
     result = xrCreateInstance(&info, &_instance);
 
@@ -143,18 +127,16 @@ bool OpenXrContext::initInstance() {
 }
 
 bool OpenXrContext::initSystem() {
-    XrSystemGetInfo info = {
-        .type = XR_TYPE_SYSTEM_GET_INFO,
-        .formFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY,
-    };
+    XrSystemGetInfo info;
+    info.type = XR_TYPE_SYSTEM_GET_INFO;
+    info.formFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY;
 
     XrResult result = xrGetSystem(_instance, &info, &_systemId);
     if (!xrCheck(_instance, result, "Failed to get system for HMD form factor."))
         return false;
 
-    XrSystemProperties props = {
-        .type = XR_TYPE_SYSTEM_PROPERTIES,
-    };
+    XrSystemProperties props;
+    props.type = XR_TYPE_SYSTEM_PROPERTIES;
 
     result = xrGetSystemProperties(_instance, _systemId, &props);
     if (!xrCheck(_instance, result, "Failed to get System properties"))
@@ -173,7 +155,8 @@ bool OpenXrContext::initSystem() {
 }
 
 bool OpenXrContext::initGraphics() {
-    XrGraphicsRequirementsOpenGLKHR requirements = { .type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR };
+    XrGraphicsRequirementsOpenGLKHR requirements;
+    requirements.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR;
     XrResult result = pfnGetOpenGLGraphicsRequirementsKHR(_instance, _systemId, &requirements);
     return xrCheck(_instance, result, "Failed to get OpenGL graphics requirements!");
 }
@@ -185,26 +168,23 @@ bool OpenXrContext::requestExitSession() {
 
 bool OpenXrContext::initSession() {
 #if defined(Q_OS_LINUX)
-    XrGraphicsBindingOpenGLXlibKHR binding = {
-        .type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR,
-        .xDisplay = XOpenDisplay(nullptr),
-        .glxDrawable = glXGetCurrentDrawable(),
-        .glxContext = glXGetCurrentContext(),
-    };
+    XrGraphicsBindingOpenGLXlibKHR binding;
+    binding.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR;
+    binding.xDisplay = XOpenDisplay(nullptr);
+    binding.glxDrawable = glXGetCurrentDrawable();
+    binding.glxContext = glXGetCurrentContext();
 #elif defined(Q_OS_WIN)
-    XrGraphicsBindingOpenGLWin32KHR binding = {
-        .type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR,
-        .xDisplay = wglGetCurrentDC(),
-        .glxContext = wglGetCurrentContext(),
-    };
+    XrGraphicsBindingOpenGLWin32KHR binding;
+    binding.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR;
+    binding.hDC = wglGetCurrentDC();
+    binding.hGLRC = wglGetCurrentContext();
 #else
   #error "Unsupported platform"
 #endif
-    XrSessionCreateInfo info = {
-        .type = XR_TYPE_SESSION_CREATE_INFO,
-        .next = &binding,
-        .systemId = _systemId,
-    };
+    XrSessionCreateInfo info;
+    info.type = XR_TYPE_SESSION_CREATE_INFO;
+    info.next = &binding;
+    info.systemId = _systemId;
 
     XrResult result = xrCreateSession(_instance, &info, &_session);
     return xrCheck(_instance, result, "Failed to create session");
@@ -212,21 +192,19 @@ bool OpenXrContext::initSession() {
 
 bool OpenXrContext::initSpaces() {
     // TODO: Do xrEnumerateReferenceSpaces before assuming stage space is available.
-    XrReferenceSpaceCreateInfo stageSpaceInfo = {
-        .type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
-        .referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE,
-        .poseInReferenceSpace = XR_INDENTITY_POSE,
-    };
+    XrReferenceSpaceCreateInfo stageSpaceInfo;
+    stageSpaceInfo.type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO;
+    stageSpaceInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE;
+    stageSpaceInfo.poseInReferenceSpace = XR_INDENTITY_POSE;
 
     XrResult result = xrCreateReferenceSpace(_session, &stageSpaceInfo, &_stageSpace);
     if (!xrCheck(_instance, result, "Failed to create stage space!"))
         return false;
 
-    XrReferenceSpaceCreateInfo viewSpaceInfo = {
-        .type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
-        .referenceSpaceType = XR_REFERENCE_SPACE_TYPE_VIEW,
-        .poseInReferenceSpace = XR_INDENTITY_POSE,
-    };
+    XrReferenceSpaceCreateInfo viewSpaceInfo;
+    viewSpaceInfo.type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO;
+    viewSpaceInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_VIEW;
+    viewSpaceInfo.poseInReferenceSpace = XR_INDENTITY_POSE;
 
     result = xrCreateReferenceSpace(_session, &viewSpaceInfo, &_viewSpace);
     return xrCheck(_instance, result, "Failed to create view space!");
@@ -285,10 +263,9 @@ bool OpenXrContext::updateSessionState(XrSessionState newState) {
         // Begin the session
         case XR_SESSION_STATE_READY: {
             if (!_isSessionRunning) {
-                XrSessionBeginInfo session_begin_info = {
-                    .type = XR_TYPE_SESSION_BEGIN_INFO,
-                    .primaryViewConfigurationType = XR_VIEW_CONFIG_TYPE,
-                };
+                XrSessionBeginInfo session_begin_info;
+                session_begin_info.type = XR_TYPE_SESSION_BEGIN_INFO;
+                session_begin_info.primaryViewConfigurationType = XR_VIEW_CONFIG_TYPE;
                 XrResult result = xrBeginSession(_session, &session_begin_info);
                 if (!xrCheck(_instance, result, "Failed to begin session!"))
                     return false;
@@ -330,7 +307,8 @@ bool OpenXrContext::updateSessionState(XrSessionState newState) {
 }
 
 bool OpenXrContext::pollEvents() {
-    XrEventDataBuffer event = { .type = XR_TYPE_EVENT_DATA_BUFFER };
+    XrEventDataBuffer event;
+    event.type = XR_TYPE_EVENT_DATA_BUFFER;
     XrResult result = xrPollEvent(_instance, &event);
     while (result == XR_SUCCESS) {
         switch (event.type) {
@@ -349,7 +327,8 @@ bool OpenXrContext::pollEvents() {
             }
             case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
                 for (int i = 0; i < HAND_COUNT; i++) {
-                    XrInteractionProfileState state = { .type = XR_TYPE_INTERACTION_PROFILE_STATE };
+                    XrInteractionProfileState state;
+                    state.type = XR_TYPE_INTERACTION_PROFILE_STATE;
                     XrResult res = xrGetCurrentInteractionProfile(_session, _handPaths[i], &state);
                     if (!xrCheck(_instance, res, "Failed to get interaction profile"))
                         continue;
@@ -382,7 +361,8 @@ bool OpenXrContext::pollEvents() {
 }
 
 bool OpenXrContext::beginFrame() {
-    XrFrameBeginInfo info = { .type = XR_TYPE_FRAME_BEGIN_INFO };
+    XrFrameBeginInfo info;
+    info.type = XR_TYPE_FRAME_BEGIN_INFO;
     XrResult result = xrBeginFrame(_session, &info);
     return xrCheck(_instance, result, "failed to begin frame!");
 }

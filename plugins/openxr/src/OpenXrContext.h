@@ -2,6 +2,7 @@
 // Overte OpenXR Plugin
 //
 // Copyright 2024 Lubosz Sarnecki
+// Copyright 2024 Overte e.V.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -10,6 +11,24 @@
 
 #include "controllers/Pose.h"
 
+#if defined(Q_OS_LINUX)
+
+#include <GL/glx.h>
+#define XR_USE_PLATFORM_XLIB
+
+#elif defined(Q_OS_WIN)
+
+#include <Unknwn.h>
+#include "Windows.h"
+#define XR_USE_PLATFORM_WIN32
+
+#else
+
+#error "Unsupported platform"
+
+#endif
+
+#define XR_USE_GRAPHICS_API_OPENGL
 #include <openxr/openxr.h>
 
 #include <glm/glm.hpp>
@@ -18,8 +37,8 @@
 #define HAND_COUNT 2
 
 constexpr XrPosef XR_INDENTITY_POSE = {
-    .orientation = { .x = 0, .y = 0, .z = 0, .w = 1.0 },
-    .position = { .x = 0, .y = 0, .z = 0 },
+    { 0, 0, 0, 1.0 },
+    { 0, 0, 0 },
 };
 
 constexpr XrViewConfigurationType XR_VIEW_CONFIG_TYPE = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
