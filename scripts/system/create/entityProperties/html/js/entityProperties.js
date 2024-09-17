@@ -1108,7 +1108,7 @@ const GROUPS = [
                 label: "Material Mapping Mode",
                 type: "dropdown",
                 options: {
-                    uv: "UV space", projected: "3D projected"
+                    uv: "UV space", projected: "3D projected", triplanar: "Triplanar mapping"
                 },
                 propertyID: "materialMappingMode",
             },
