@@ -187,6 +187,9 @@ public:
     bool operator!=(const Sampler& other) const {
         return !(*this == other);
     }
+
+    static Sampler parseSampler(const QJsonObject& object);
+
 protected:
     Desc _desc;
 
@@ -723,6 +726,8 @@ public:
 
     bool isDefined() const;
     std::function<gpu::TexturePointer()> getTextureOperator() const { return _gpuTextureOperator; }
+
+    void setSampler(const gpu::Sampler& sampler);
 
 protected:
     gpu::TexturePointer _gpuTexture;
