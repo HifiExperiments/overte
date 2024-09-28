@@ -453,6 +453,7 @@ public:
     typedef Cache<BufferPointer>::Vector BufferCaches;
     typedef Cache<TexturePointer>::Vector TextureCaches;
     typedef Cache<TextureTablePointer>::Vector TextureTableCaches;
+    typedef Cache<Sampler>::Vector SamplerCaches;
     typedef Cache<Stream::FormatPointer>::Vector StreamFormatCaches;
     typedef Cache<Transform>::Vector TransformCaches;
     typedef Cache<PipelinePointer>::Vector PipelineCaches;
@@ -509,6 +510,7 @@ public:
     BufferCaches _buffers;
     TextureCaches _textures;
     TextureTableCaches _textureTables;
+    SamplerCaches _samplers;
     StreamFormatCaches _streamFormats;
     TransformCaches _transforms;
     PipelineCaches _pipelines;
