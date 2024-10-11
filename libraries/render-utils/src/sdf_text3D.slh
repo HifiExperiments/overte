@@ -58,8 +58,14 @@ vec2 evalSDF(vec2 texCoord) {
     return vec2(opacity, msdf.a);
 }
 
-vec4 evalSDFColor(vec2 texCoord, vec4 glyphBounds) {
+vec4 evalSDFColor(vec2 texCoord, vec4 glyphBounds, float isTofu) {
     vec3 color = params.color.rgb;
+
+    if (isTofu > 0.0f) {
+        const float OUTLINE_WIDTH = 0.1;
+        return vec4(color, any(greaterThan(abs(texCoord - vec2(0.5)), vec2(0.5 - OUTLINE_WIDTH, 0.5 - (glyphBounds.z / glyphBounds.w) * OUTLINE_WIDTH))));
+    }
+
     vec2 sdf = evalSDF(texCoord);
 
     // Outline
@@ -93,7 +99,7 @@ vec4 evalSDFColor(vec2 texCoord, vec4 glyphBounds) {
     return vec4(color, sdf.x);
 }
 
-vec4 evalSDFSuperSampled(vec2 texCoord, vec2 positionMS, vec4 glyphBounds) {
+vec4 evalSDFSuperSampled(vec2 texCoord, vec2 positionMS, vec4 glyphBounds, float isTofu) {
     // Clip to edges. Note: We don't need to check the top edge.
     if (positionMS.x < params.bounds.x || positionMS.x > (params.bounds.x + params.bounds.z) ||
         positionMS.y < params.bounds.y - params.bounds.w) {
@@ -105,10 +111,10 @@ vec4 evalSDFSuperSampled(vec2 texCoord, vec2 positionMS, vec4 glyphBounds) {
 
     // Perform 4x supersampling for anisotropic filtering
     vec4 color;
-    color = evalSDFColor(texCoord, glyphBounds);
-    color += evalSDFColor(texCoord + dxTexCoord, glyphBounds);
-    color += evalSDFColor(texCoord + dyTexCoord, glyphBounds);
-    color += evalSDFColor(texCoord + dxTexCoord + dyTexCoord, glyphBounds);
+    color = evalSDFColor(texCoord, glyphBounds, isTofu);
+    color += evalSDFColor(texCoord + dxTexCoord, glyphBounds, isTofu);
+    color += evalSDFColor(texCoord + dyTexCoord, glyphBounds, isTofu);
+    color += evalSDFColor(texCoord + dxTexCoord + dyTexCoord, glyphBounds, isTofu);
     color *= 0.25;
 
     return vec4(color.rgb, step(interiorCutoff, color.a));
