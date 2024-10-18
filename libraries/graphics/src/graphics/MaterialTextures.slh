@@ -680,21 +680,21 @@ float fetchUVAnimationMaskMap(vec2 uv) {
 <@if albedo@>
     vec4 <$albedo$> = <$albedo$>Triplanar;
 <@endif@>
-<@if roughness@>
-    float <$roughness$> = <$roughness$>Triplanar;
-<@endif@>
 <@if normal@>
     // FIXME: this isn't strictly correct, as our tangents no longer match the space of our UVs
     vec3 <$normal$> = normalize(<$normal$>Triplanar);
 <@endif@>
-<@if metallic@>
-    float <$metallic$> = <$metallic$>Triplanar;
+<@if shade@>
+    vec3 <$shade$> = <$shade$>Triplanar;
 <@endif@>
 <@if emissive@>
     vec3 <$emissive$> = <$emissive$>Triplanar;
 <@endif@>
-<@if scattering@>
-    float <$scattering$> = <$scattering$>Triplanar;
+<@if shadingShift@>
+    float <$shadingShift$> = <$shadingShift$>Triplanar;
+<@endif@>
+<@if rim@>
+    vec3 <$rim$> = <$rim$>Triplanar;
 <@endif@>
 
 <@endfunc@>
