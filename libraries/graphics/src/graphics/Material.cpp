@@ -212,6 +212,22 @@ void Material::applySampler(MapChannel channel) {
     }
 }
 
+void Material::setTexCoordSet(MapChannel channel, int texCoordSet) {
+    std::lock_guard<std::recursive_mutex> locker(_textureMapsMutex);
+    _texCoordSets[channel] = texCoordSet;
+}
+
+int Material::getTexCoordSet(MapChannel channel) {
+    std::lock_guard<std::recursive_mutex> locker(_textureMapsMutex);
+
+    auto result = _texCoordSets.find(channel);
+    if (result != _texCoordSets.end()) {
+        return (result->second);
+    } else {
+        return 0;
+    }
+}
+
 bool Material::resetOpacityMap() const {
     // If OpacityMapMode explicit then nothing need to change here.
     if (_key.isOpacityMapMode()) {
