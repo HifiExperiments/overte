@@ -21,6 +21,7 @@
 #include <procedural/ProceduralSkybox.h>
 #include <LightPayload.h>
 #include <DeferredLightingEffect.h>
+#include <ZoneRenderer.h>
 
 #include "EntityTreeRenderer.h"
 
@@ -238,6 +239,13 @@ void ZoneEntityRenderer::doRender(RenderArgs* args) {
         } else if (_ambientOcclusionMode == COMPONENT_MODE_ENABLED) {
             _ambientOcclusionStage->_currentFrame.pushAmbientOcclusion(_ambientOcclusionIndex);
         }
+
+        // Hack: CullTest::_containingZones is empty at the beginning of a frame, and our zones render in order,
+        // so we know we're in the first/smallest zone if CullTest::_containingZones.empty()
+        if (CullTest::_containingZones.empty() && ZoneRendererTask::_lightingModel) {
+            ZoneRendererTask::_lightingModel->setNormalMapAttenuation(_normalMapAttenuationProperties.getMin(),
+                _normalMapAttenuationProperties.getMax());
+        }
     }
 
     CullTest::_containingZones.insert(_entityID);
@@ -272,6 +280,7 @@ void ZoneEntityRenderer::doRenderUpdateAsynchronousTyped(const TypedEntityPointe
     bool bloomChanged = entity->bloomPropertiesChanged();
     bool tonemappingChanged = entity->tonemappingPropertiesChanged();
     bool ambientOcclusionChanged = entity->ambientOcclusionPropertiesChanged();
+    bool normalMapAttenuationChanged = entity->normalMapAttenuationPropertiesChanged();
     entity->resetRenderingPropertiesChanged();
 
     if (transformChanged) {
@@ -321,6 +330,10 @@ void ZoneEntityRenderer::doRenderUpdateAsynchronousTyped(const TypedEntityPointe
         updateAmbientOcclusionFromEntity(entity);
     }
 
+    if (normalMapAttenuationChanged) {
+        _normalMapAttenuationProperties = entity->getNormalMapAttenuationProperties();
+    }
+
     bool visuallyReady = true;
     uint32_t skyboxMode = entity->getSkyboxMode();
     if (skyboxMode == COMPONENT_MODE_ENABLED && !_skyboxTextureURL.isEmpty()) {
@@ -343,7 +356,8 @@ bool ZoneEntityRenderer::needsRenderUpdateFromTypedEntity(const TypedEntityPoint
         entity->bloomPropertiesChanged() ||
         entity->skyboxPropertiesChanged() ||
         entity->tonemappingPropertiesChanged() ||
-        entity->ambientOcclusionPropertiesChanged()) {
+        entity->ambientOcclusionPropertiesChanged() ||
+        entity->normalMapAttenuationPropertiesChanged()) {
 
         return true;
     }
