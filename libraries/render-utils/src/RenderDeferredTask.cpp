@@ -506,18 +506,16 @@ void RenderTransparentDeferred::run(const RenderContextPointer& renderContext, c
         batch.setUniformBuffer(ru::Buffer::LightModel, lightingModel->getParametersBuffer());
         batch.setResourceTexture(ru::Texture::AmbientFresnel, lightingModel->getAmbientFresnelLUT());
 
-        // Set the light
-        deferredLightingEffect->setupKeyLightBatch(args, batch, *lightFrame);
-        deferredLightingEffect->setupLocalLightsBatch(batch, lightClusters);
-
-        // Setup haze if current zone has haze
+        // Haze
+        graphics::HazePointer hazePointer;
         const auto& hazeStage = args->_scene->getStage<HazeStage>();
         if (hazeStage && hazeFrame->_elements.size() > 0) {
-            const auto& hazePointer = hazeStage->getElement(hazeFrame->_elements.front());
-            if (hazePointer) {
-                batch.setUniformBuffer(graphics::slot::buffer::Buffer::HazeParams, hazePointer->getHazeParametersBuffer());
-            }
+            hazePointer = hazeStage->getElement(hazeFrame->_elements.front());
         }
+
+        // Set the light
+        deferredLightingEffect->setupKeyLightBatch(args, batch, *lightFrame, hazePointer);
+        deferredLightingEffect->setupLocalLightsBatch(batch, lightClusters);
 
         // From the lighting model define a global shapKey ORED with individiual keys
         ShapeKey::Builder keyBuilder;

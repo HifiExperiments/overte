@@ -54,6 +54,7 @@ void addPlumberPipeline(ShapePlumber& plumber,
 
 void batchSetter(const ShapePipeline& pipeline, gpu::Batch& batch, RenderArgs* args);
 void lightBatchSetter(const ShapePipeline& pipeline, gpu::Batch& batch, RenderArgs* args);
+void lightBatchMToonSetter(const ShapePipeline& pipeline, gpu::Batch& batch, RenderArgs* args);
 static bool forceLightBatchSetter{ false };
 
 // TOOD: build this list algorithmically so we don't have to maintain it
@@ -332,7 +333,9 @@ void addPlumberPipeline(ShapePlumber& plumber,
                 state->setDepthBiasSlopeScale(1.0f);
             }
 
-            auto baseBatchSetter = (forceLightBatchSetter || key.isTranslucent() || key.isMToon()) ? &lightBatchSetter : &batchSetter;
+            auto baseBatchSetter = (forceLightBatchSetter || key.isTranslucent() || key.isMToon())
+                                       ? (key.isMToon() ? &lightBatchMToonSetter : &lightBatchSetter)
+                                       : &batchSetter;
             render::ShapePipeline::BatchSetter finalBatchSetter;
             if (extraBatchSetter) {
                 finalBatchSetter = [baseBatchSetter, extraBatchSetter](const ShapePipeline& pipeline, gpu::Batch& batch, render::Args* args) {
@@ -386,6 +389,16 @@ void lightBatchSetter(const ShapePipeline& pipeline, gpu::Batch& batch, RenderAr
     // Set the light
     if (pipeline.locations->keyLightBufferUnit) {
         DependencyManager::get<DeferredLightingEffect>()->setupKeyLightBatch(args, batch);
+    }
+}
+
+void lightBatchMToonSetter(const ShapePipeline& pipeline, gpu::Batch& batch, RenderArgs* args) {
+    // Set the batch
+    batchSetter(pipeline, batch, args);
+
+    // Set the light
+    if (pipeline.locations->keyLightBufferUnit) {
+        DependencyManager::get<DeferredLightingEffect>()->setupKeyLightBatch(args, batch, true);
     }
 }
 

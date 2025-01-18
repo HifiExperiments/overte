@@ -55,12 +55,20 @@ void DeferredLightingEffect::init() {
     loadLightProgram(shader::render_utils::program::local_lights_drawOutline, true, _localLightOutline);
 }
 
-// FIXME: figure out how to move lightFrame into a varying in GeometryCache and RenderPipelines
-void DeferredLightingEffect::setupKeyLightBatch(const RenderArgs* args, gpu::Batch& batch) {
-    setupKeyLightBatch(args, batch, args->_scene->getStage<LightStage>()->_currentFrame);
+// FIXME: figure out how to move lightFrame and hazeFrame into a varying in GeometryCache and RenderPipelines
+void DeferredLightingEffect::setupKeyLightBatch(const RenderArgs* args, gpu::Batch& batch, bool setHaze) {
+    graphics::HazePointer hazePointer;
+    if (setHaze) {
+        const auto& hazeStage = args->_scene->getStage<HazeStage>();
+        if (hazeStage && hazeStage->_currentFrame._elements.size() > 0) {
+            hazePointer = hazeStage->getElement(hazeStage->_currentFrame._elements.front());
+        }
+    }
+    setupKeyLightBatch(args, batch, args->_scene->getStage<LightStage>()->_currentFrame, hazePointer);
 }
 
-void DeferredLightingEffect::setupKeyLightBatch(const RenderArgs* args, gpu::Batch& batch, const LightStage::Frame& lightFrame) {
+void DeferredLightingEffect::setupKeyLightBatch(const RenderArgs* args, gpu::Batch& batch, const LightStage::Frame& lightFrame,
+                                                const graphics::HazePointer& hazePointer) {
     PerformanceTimer perfTimer("DLE->setupBatch()");
     graphics::LightPointer keySunLight;
     auto lightStage = args->_scene->getStage<LightStage>();
@@ -83,6 +91,10 @@ void DeferredLightingEffect::setupKeyLightBatch(const RenderArgs* args, gpu::Bat
         if (keyAmbiLight->getAmbientMap() ) {
             batch.setResourceTexture(ru::Texture::Skybox, keyAmbiLight->getAmbientMap());
         }
+    }
+
+    if (hazePointer) {
+        batch.setUniformBuffer(gr::Buffer::HazeParams, hazePointer->getHazeParametersBuffer());
     }
 }
 
@@ -426,17 +438,15 @@ void RenderDeferredSetup::run(const render::RenderContextPointer& renderContext,
             batch.setPipeline(program);
         }
 
-        // Setup the global lighting
-        deferredLightingEffect->setupKeyLightBatch(args, batch, *lightFrame);
-
         // Haze
+        graphics::HazePointer hazePointer;
         const auto& hazeStage = args->_scene->getStage<HazeStage>();
         if (hazeStage && hazeFrame->_elements.size() > 0) {
-            const auto& hazePointer = hazeStage->getElement(hazeFrame->_elements.front());
-            if (hazePointer) {
-                batch.setUniformBuffer(graphics::slot::buffer::Buffer::HazeParams, hazePointer->getHazeParametersBuffer());
-            }
+            hazePointer = hazeStage->getElement(hazeFrame->_elements.front());
         }
+
+        // Setup the global lighting
+        deferredLightingEffect->setupKeyLightBatch(args, batch, *lightFrame, hazePointer);
 
         batch.draw(gpu::TRIANGLE_STRIP, 4);
 
