@@ -25,7 +25,16 @@
 // so this is done out of line
 
 static void initShadersResources() {
-    Q_INIT_RESOURCE(shaders);
+    Q_INIT_RESOURCE(shaderNames);
+#if defined(USE_GLES)
+    Q_INIT_RESOURCE(shaders310es);
+    Q_INIT_RESOURCE(shaders310es_stereo);
+#else
+    Q_INIT_RESOURCE(shaders410);
+    Q_INIT_RESOURCE(shaders410_stereo);
+    Q_INIT_RESOURCE(shaders450);
+    Q_INIT_RESOURCE(shaders450_stereo);
+#endif
 }
 
 namespace shader {
@@ -53,7 +62,7 @@ const std::vector<Dialect>& allDialects() {
 const Dialect DEFAULT_DIALECT = Dialect::glsl450;
 
 const std::vector<Dialect> & allDialects() {
-    static const std::vector<Dialect> ALL_DIALECTS{ { Dialect::glsl450 } };
+    static const std::vector<Dialect> ALL_DIALECTS{ { Dialect::glsl450, Dialect::glsl410 } };
     return ALL_DIALECTS;
 }
 #endif
@@ -105,7 +114,7 @@ DialectVariantSource loadDialectVariantSource(const std::string& basePath) {
     DialectVariantSource result;
     result.scribe = loadResource(basePath + "scribe");
     result.spirv = loadSpirvResource(basePath + "spirv");
-    //result.glsl = loadResource(basePath + "glsl");
+    result.glsl = loadResource(basePath + "glsl");
     String reflectionJson = loadResource(basePath + "json");
     result.reflection.parse(reflectionJson);
     return result;
@@ -226,10 +235,10 @@ String Source::getSource(Dialect dialect, Variant variant) const {
     // which breaks android rendering
     return variantSource.scribe;
 #else
-    //if (variantSource.glsl.empty()) {
+    if (variantSource.glsl.empty()) {
         return variantSource.scribe;
-    //}
-    //return variantSource.glsl;
+    }
+    return variantSource.glsl;
 #endif
 }
 

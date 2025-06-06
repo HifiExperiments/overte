@@ -1,6 +1,6 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
   <qresource prefix="/shaders">
-@SHADER_QRC@
+@SHADER_410_stereo_QRC@
   </qresource>
 </RCC>
