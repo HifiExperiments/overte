@@ -11,6 +11,7 @@
 
 #include "RenderableEntityItem.h"
 
+#include <GeometryCache.h>
 #include <procedural/Procedural.h>
 #include <ShapeEntityItem.h>
 
@@ -45,6 +46,7 @@ private:
     bool _unlit { false };
 
     gpu::BufferPointer _colorBuffer { std::make_shared<gpu::Buffer>() };
+    FadeBuffers _fadeBuffers;
 };
 
 } } 
