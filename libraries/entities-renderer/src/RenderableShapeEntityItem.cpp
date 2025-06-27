@@ -14,7 +14,6 @@
 #include <gpu/Batch.h>
 #include <DependencyManager.h>
 #include <PerfStat.h>
-#include <render/TransitionStage.h>
 
 #include "RenderPipelines.h"
 
@@ -162,17 +161,7 @@ void ShapeEntityRenderer::doRender(RenderArgs* args) {
             if (!fading) {
                 geometryCache->renderShapeInstance(args, batch, geometryShape, wireframe, outColor, pipeline);
             } else {
-                FadeObjectParams fadeParams;
-                auto item = args->_scene->getItemSafe(_renderItemID);
-                if (item.exist()) {
-                    auto transitionStage = args->_scene->getStage<render::TransitionStage>();
-                    if (transitionStage && transitionStage->checkId(item.getTransitionId())) {
-                        auto& transition = transitionStage->getElement(item.getTransitionId());
-                        if (transition.paramsBuffer._size == sizeof(FadeObjectParams)) {
-                            fadeParams = static_cast<gpu::StructBuffer<FadeObjectParams>&>(transition.paramsBuffer).get();
-                        }
-                    }
-                }
+                FadeObjectParams fadeParams = getFadeParams(args->_scene);
                 geometryCache->renderShapeFadeInstance(args, batch, geometryShape, wireframe, outColor, fadeParams, pipeline);
             }
         } else {
@@ -185,17 +174,7 @@ void ShapeEntityRenderer::doRender(RenderArgs* args) {
                     geometryCache->renderShape(batch, geometryShape, _colorBuffer);
                 }
             } else {
-                FadeObjectParams fadeParams;
-                auto item = args->_scene->getItemSafe(_renderItemID);
-                if (item.exist()) {
-                    auto transitionStage = args->_scene->getStage<render::TransitionStage>();
-                    if (transitionStage && transitionStage->checkId(item.getTransitionId())) {
-                        auto& transition = transitionStage->getElement(item.getTransitionId());
-                        if (transition.paramsBuffer._size == sizeof(FadeObjectParams)) {
-                            fadeParams = static_cast<gpu::StructBuffer<FadeObjectParams>&>(transition.paramsBuffer).get();
-                        }
-                    }
-                }
+                FadeObjectParams fadeParams = getFadeParams(args->_scene);
                 _fadeBuffers.clear();
                 _fadeBuffers.update(fadeParams);
                 if (wireframe) {
